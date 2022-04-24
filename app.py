@@ -8,8 +8,11 @@ from flask_ngrok import run_with_ngrok
 import nltk
 from keras.models import load_model
 from nltk.stem import WordNetLemmatizer
+
 lemmatizer = WordNetLemmatizer()
 
+
+from flask_sqlalchemy import SQLAlchemy
 
 # chat initialization
 model = load_model("chatbot_model.h5")
@@ -19,11 +22,35 @@ classes = pickle.load(open("classes.pkl", "rb"))
 
 app = Flask(__name__)
 app.secret_key = 'chatsecret'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgrepass#16@127.0.0.1:5432/ai_chatbot'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Create our database model
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True)
+    name = db.Column(db.String(70), nullable=False)
+    occupation = db.Column(db.String(70), nullable=False)
+
+    def __init__(self, email, name, occupation):
+        self.email = email
+        self.name = name
+        self.occupation = occupation
+
+    def __repr__(self):
+        return '<E-mail %r>' % self.email
 
 @app.route("/")
 def home():
     session['scenario']='chat'
     session['mode']=''
+
+    #user=User(email='monu.k.john6598@gmail.com', name='Monu John2', occupation='front end developer')
+    # db.session.add(user)
+    # db.session.commit()
+
     return render_template("index.html")
 
 
